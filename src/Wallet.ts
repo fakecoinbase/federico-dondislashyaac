@@ -6,8 +6,8 @@ import {
 
 export default class Wallet {
   readonly address: string
-  readonly publicKey: string
-  readonly privateKey: string
+  private readonly publicKey: string
+  private readonly privateKey: string
 
   constructor () {
     const { publicKey, privateKey } = generateKeyPairSync('ec', {
