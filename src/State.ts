@@ -22,6 +22,10 @@ export default class State {
       .digest('hex')
   }
 
+  allocateInitialAccount (address: string, account: Account): void {
+    this.wallets[address] = account
+  }
+
   commit (arg: Transaction): void {
     delete this.transactions[arg.hash]
 
