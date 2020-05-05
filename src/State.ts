@@ -3,21 +3,20 @@ import { createHash } from 'crypto'
 import Wallet from './Wallet'
 import Transaction from './Transaction'
 import Account from './Account'
+import Block from './Block'
 
 export default class State {
   private readonly wallets: { [address: string]: Account } = { }
-  private readonly transactions: { [hash: string]: Transaction } = { }
+  private readonly transactions: Transaction[] = []
 
   public get hash (): string {
     const wls = Object.keys(this.wallets).sort()
-    const txs = Object.keys(this.transactions).sort()
 
     return createHash('SHA256')
       .update(
         JSON.stringify(wls) +
         JSON.stringify(wls.map(address => this.wallets[address])) +
-        JSON.stringify(txs) +
-        JSON.stringify(txs.map(hash => this.transactions[hash]))
+        JSON.stringify(this.transactions)
       )
       .digest('hex')
   }
@@ -26,13 +25,15 @@ export default class State {
     this.wallets[address] = account
   }
 
-  commit (arg: Transaction): void {
-    delete this.transactions[arg.hash]
+  commit (tx: Transaction): void {
+    this.wallets[tx.fromAddress].nonce += 1
 
-    this.wallets[arg.fromAddress].balance -= arg.amount
-    this.wallets[arg.toAddress].balance += arg.amount
+    this.wallets[tx.fromAddress].balance -= tx.amount
+    this.wallets[tx.toAddress].balance += tx.amount
+  }
 
-    this.wallets[arg.fromAddress].nonce += 1
+  withdraw (block: Block, reward: number): void {
+    this.wallets[block.minerAddress].balance += reward
   }
 
   getBalanceOf (address: string): number {
@@ -51,20 +52,14 @@ export default class State {
     }
   }
 
-  getPendingTransactionsOf (address: string): Transaction[] {
-    const txs: Transaction[] = []
-
-    Object.entries(this.transactions).forEach(([hash, tx]) => {
-      if (tx.fromAddress === address) {
-        txs.push(tx)
-      }
-    })
-
-    return txs
+  getPendingTransactions (of?: string): Transaction[] {
+    return (of)
+      ? this.transactions.filter(tx => tx.fromAddress === of)
+      : this.transactions
   }
 
-  getPendingTransactionsCountOf (address: string): number {
-    return this.getPendingTransactionsOf(address).length
+  getPendingTransactionsCount (of?: string): number {
+    return this.getPendingTransactions(of).length
   }
 
   createWallet (): Wallet {
@@ -85,16 +80,16 @@ export default class State {
     if (amount <= 0) { throw new Error('Amount must be greater than 0.') }
     if (amount > this.getBalanceOf(sender)) { throw new Error('Amount not available.') }
 
-    const t = new Transaction(
+    const tx = new Transaction(
       amount,
       sender,
       receiver,
-      this.getNonceOf(sender) + this.getPendingTransactionsCountOf(sender),
+      this.getNonceOf(sender) + this.getPendingTransactionsCount(sender),
       issuer
     )
 
-    this.transactions[t.hash] = t
+    this.transactions.push(tx)
 
-    return t
+    return tx
   }
 }
