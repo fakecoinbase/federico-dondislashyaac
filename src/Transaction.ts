@@ -32,4 +32,10 @@ export default class Transaction {
 
     return createHash('SHA256').update(json).digest('hex')
   }
+
+  verify (issuer: string): boolean {
+    return createVerify('RSA-SHA256')
+      .update(this.hash)
+      .verify(issuer, this.signature, 'hex')
+  }
 }

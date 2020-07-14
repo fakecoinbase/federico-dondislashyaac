@@ -54,6 +54,8 @@ export default class Blockchain {
         if (tx.amount <= 0) { throw new Error('Amount must be greater than 0.') }
         if (tx.amount > this.state.getBalanceOf(tx.fromAddress)) { throw new Error('Amount not available.') }
 
+        if (tx.verify(Wallet.getAddressAsPEM(tx.fromAddress))) { throw new Error('Signature not valid.') }
+
         this.state.commit(tx)
 
         txsToInclude.push(tx)
