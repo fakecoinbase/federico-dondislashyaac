@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 import Account from './Account'
 import Block from './Block'
 import State from './State'
@@ -95,5 +98,12 @@ export default class Blockchain {
     if (this.state.getPendingTransactionsCount() === this.startMiningAt) { setTimeout(() => { this.mine() }, 0) }
 
     return tx
+  }
+
+  exportToJSON (): void {
+    const dir = path.join(__dirname, '../yaac.blockchain')
+    const json = JSON.stringify(this, null, 2)
+
+    fs.writeFileSync(dir, json)
   }
 }
