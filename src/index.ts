@@ -30,3 +30,5 @@ blockchain.createTransaction(
   10,
   b
 )
+
+blockchain.exportToJSON()

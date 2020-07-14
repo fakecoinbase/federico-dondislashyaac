@@ -12,8 +12,8 @@ export default class Blockchain {
   private state: State = new State()
 
   constructor (
-    private difficulty: number,
-    private miningReward: number,
+    readonly difficulty: number,
+    readonly miningReward: number,
     private minerAddress: string,
     private startMiningAt: number,
     luckyDucklings: { [address: string]: Account }
@@ -33,14 +33,6 @@ export default class Blockchain {
     })
   }
 
-  public getDifficulty (): number {
-    return this.difficulty
-  }
-
-  public getMiningReward (): number {
-    return this.miningReward
-  }
-
   getBalanceOf (address: string): number {
     return this.state.getBalanceOf(address)
   }
@@ -57,8 +49,6 @@ export default class Blockchain {
       const tx = txs.shift()!
 
       try {
-        // Verify the signature...
-
         if (this.getNonceOf(tx.fromAddress) < tx.nonce) { throw new Error('Nonce not valid, possible replay attack.') }
 
         if (tx.amount <= 0) { throw new Error('Amount must be greater than 0.') }
